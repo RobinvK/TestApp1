@@ -13,6 +13,7 @@ import com.example.localadmin.testapp1.AddRecipe.MyCardAdapter;
 
 /**
  * Created by robin on 22-6-2015
+ * //comment
  */
 public class ViewRecipeListActivity extends AppCompatActivity {
 
