@@ -16,12 +16,21 @@ import java.util.ArrayList;
 
 /**
  * Created on 22-6-2015.
+ * Last changed on 9-6-2015
+ *
+ * V 1.01
+ *
+ * changes:
+ * V1.01: implementation of onRestoreInstanceState & onSaveInstanceState to retain elements added to the Recyclerviews on orientation change
+ *
  */
 public class AddRecipeActivity extends AppCompatActivity {
     DbAdapter dbHelper;
 
     private MyRecyclerViewAdapter ingredientListAdapter;
     private MyRecyclerViewAdapter stepListAdapter;
+    ArrayList<DataObject> ingredientData;
+    ArrayList<DataObject> stepData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,15 +38,60 @@ public class AddRecipeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_recipe);
         dbHelper = new DbAdapter(this);
 
-        RecyclerView ingredientRecyclerView = (RecyclerView) findViewById(R.id.my_ingredient_recycler_view);
-        ingredientListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
-        setupRecyclerView(ingredientRecyclerView, ingredientListAdapter);
 
-        RecyclerView stepRecyclerView = (RecyclerView) findViewById(R.id.my_step_recycler_view);
-        stepListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
-        setupRecyclerView(stepRecyclerView, stepListAdapter);
-
+        if (savedInstanceState != null) {
+            Log.d("AddRecipeActivity", "onCreate");
+            getIngredientAndStepData(savedInstanceState);
+        }
+        else{
+            ingredientListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
+            setupRecyclerView((RecyclerView) findViewById(R.id.my_ingredient_recycler_view), ingredientListAdapter);
+            stepListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
+            setupRecyclerView((RecyclerView) findViewById(R.id.my_step_recycler_view), stepListAdapter);
+        }
     }
+
+    @Override
+    protected void onRestoreInstanceState(final Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        // This is here because if you are recreating after an orientation change, for example, onCreate won't be called
+        if (savedInstanceState != null) {
+            Log.d("AddRecipeActivity", "onRestoreInstanceState");
+            getIngredientAndStepData(savedInstanceState);
+        }
+    }
+
+    private void getIngredientAndStepData(Bundle savedInstanceState){
+        ingredientData = savedInstanceState.getParcelableArrayList("myIngredientData");
+        stepData = savedInstanceState.getParcelableArrayList("myStepData");
+        if (ingredientData != null) {
+            ingredientListAdapter = new MyRecyclerViewAdapter(ingredientData);
+            setupRecyclerView((RecyclerView) findViewById(R.id.my_ingredient_recycler_view), ingredientListAdapter);
+        }
+        else{
+            Log.d("AddRecipeActivity", "ingredientData == null");
+        }
+        if (stepData != null) {
+            stepListAdapter = new MyRecyclerViewAdapter(stepData);
+            setupRecyclerView((RecyclerView) findViewById(R.id.my_step_recycler_view), stepListAdapter);
+        }
+        else{
+            Log.d("AddRecipeActivity", "stepData == null");
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(final Bundle outState) {
+        Log.d("AddRecipeActivity", "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+        ingredientData = ingredientListAdapter.getDataSet();
+        outState.putParcelableArrayList("myIngredientData", ingredientData);
+        stepData = stepListAdapter.getDataSet();
+        outState.putParcelableArrayList("myStepData", stepData);
+    }
+
+
 
     private void setupRecyclerView(RecyclerView mRecyclerView, RecyclerView.Adapter listAdapter) {
         // mRecyclerView.setHasFixedSize(true);
@@ -57,7 +111,7 @@ public class AddRecipeActivity extends AppCompatActivity {
     public void addIngredient(View view) {
         EditText edit = (EditText) findViewById(R.id.txtItem);
         String textFieldText = edit.getText().toString().trim();
-        if (textFieldText != null && !textFieldText.equals("") && !textFieldText.equals(" ")) {
+        if (!textFieldText.equals("") && !textFieldText.equals(" ")) {
             ingredientListAdapter.addItem(new DataObject(textFieldText), 0);
             ((EditText) findViewById(R.id.txtItem)).getText().clear();
         }
@@ -67,7 +121,7 @@ public class AddRecipeActivity extends AppCompatActivity {
         //TODO: check if step description does not exceed 1000 characters!
         EditText edit = (EditText) findViewById(R.id.edit_text_step);
         String textFieldText = edit.getText().toString().trim();
-        if (textFieldText != null && !textFieldText.equals("") && !textFieldText.equals(" ")) {
+        if (!textFieldText.equals("") && !textFieldText.equals(" ")) {
             stepListAdapter.addItem(new DataObject(textFieldText), stepListAdapter.getItemCount());
             ((EditText) findViewById(R.id.edit_text_step)).getText().clear();
         }
@@ -78,7 +132,7 @@ public class AddRecipeActivity extends AppCompatActivity {
         EditText titleTextField = (EditText) findViewById(R.id.edit_text_recipe_title);
         String title = titleTextField.getText().toString().trim();
 
-        if (title == null || title.equals("") || title.equals(" ")) {
+        if (title.equals("") || title.equals(" ")) {
             Toast.makeText(this, "Please add a title", Toast.LENGTH_LONG).show();//TODO: improve UI
             return;
         }
@@ -96,14 +150,14 @@ public class AddRecipeActivity extends AppCompatActivity {
                 return;
             }
 
-            for (int i = 0; i < separated.length-1; i++) {
+            for (int i = 0; i < separated.length - 1; i++) {
                 separated[i] = separated[i].trim();
                 separated[i] = separated[i].toLowerCase();
                 if (separated[i] == null || separated[i].equals("") || separated[i].equals(" ")) {
                     Log.d("addRecipe", " ingredient invalid: " + separated[i] + ".");
                 } else if (dbHelper.IsIngredientAlreadyInDB(separated[i])) {
                     long ingredientID = dbHelper.getIngredientID(separated[i]);
-                    Log.d("addRecipe", " ingredient "+separated[i]+" already exists @ " + ingredientID + ".");
+                    Log.d("addRecipe", " ingredient " + separated[i] + " already exists @ " + ingredientID + ".");
                     dbHelper.insertIngredientRecipeLink(recipeID, ingredientID);
                     //TODO: check ID for correct entry
 
@@ -111,11 +165,10 @@ public class AddRecipeActivity extends AppCompatActivity {
                     long ingredientID = dbHelper.insertIngredient(separated[i]);
                     Log.d("addRecipe", " ingredient " + separated[i] + " added to DB @ " + ingredientID + ".");
                     //TODO: check ID for correct entry
-                    dbHelper.insertIngredientRecipeLink(recipeID,ingredientID);
+                    dbHelper.insertIngredientRecipeLink(recipeID, ingredientID);
                     //TODO: check ID for correct entry
                 }
             }
-
 
 
             String steps = stepListAdapter.getDataAsString();
@@ -126,7 +179,7 @@ public class AddRecipeActivity extends AppCompatActivity {
                 return;
             }
 
-            for (int i = 0; i < separated.length-1; i++) {
+            for (int i = 0; i < separated.length - 1; i++) {
                 separated[i] = separated[i].trim();
                 if (separated[i] == null || separated[i].equals("") || separated[i].equals(" ")) {
                     Log.d("addRecipe", " step invalid: " + separated[i] + ".");
@@ -135,7 +188,6 @@ public class AddRecipeActivity extends AppCompatActivity {
                     //TODO: check ID for correct entry
                 }
             }
-
 
 
         }

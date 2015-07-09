@@ -11,12 +11,25 @@ import com.example.localadmin.testapp1.R;
 
 import java.util.ArrayList;
 
+/**
+ * Created on 22-6-2015.
+ * Last changed on 9-6-2015
+ *
+ * V 1.01
+ *
+ * changes:
+ * V1.01: implementation of getDataSet to accommodate V1.01 changes to AddRecipeActivity
+ *
+ */
+
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.IngredientViewHolder> {
     private ArrayList<DataObject> mDataSet;
 
     public MyRecyclerViewAdapter(ArrayList<DataObject> myDataset) {
         mDataSet = myDataset;
     }
+
+
 
     @Override
     public IngredientViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -33,6 +46,9 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     public void addItem(DataObject dataObj, int index) {
         mDataSet.add(index, dataObj);
         notifyItemInserted(index);
+    }
+    public ArrayList<DataObject> getDataSet() {
+        return mDataSet;
     }
 
     public void deleteItem(int index) {
@@ -59,6 +75,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     class IngredientViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView dataTextView;
         ImageView icon;
+
 
         public IngredientViewHolder(View itemView) {
             super(itemView);
