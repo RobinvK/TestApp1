@@ -13,12 +13,11 @@ import java.util.ArrayList;
 
 /**
  * Created on 22-6-2015.
- * Last changed on 9-6-2015
- *
- * V 1.01
+ * Last changed on 9-7-2015
+ * Current version: V 1.01
  *
  * changes:
- * V1.01: implementation of getDataSet to accommodate V1.01 changes to AddRecipeActivity
+ * V1.01 - 9-7-2015: implementation of getDataSet to accommodate V1.01 changes to AddRecipeActivity
  *
  */
 

@@ -1,28 +1,43 @@
 package com.example.localadmin.testapp1.AddRecipe;
 
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.localadmin.testapp1.DbAdapter;
 import com.example.localadmin.testapp1.R;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created on 22-6-2015.
- * Last changed on 9-6-2015
- *
- * V 1.01
- *
+ * Last changed on 9-7-2015
+ * Current version: V 1.01
+ * <p>
  * changes:
- * V1.01: implementation of onRestoreInstanceState & onSaveInstanceState to retain elements added to the Recyclerviews on orientation change
- *
+ * V1.01 - 9-7-2015: implementation of onRestoreInstanceState & onSaveInstanceState to retain elements added to the Recyclerviews on orientation change
  */
 public class AddRecipeActivity extends AppCompatActivity {
     DbAdapter dbHelper;
@@ -42,8 +57,7 @@ public class AddRecipeActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             Log.d("AddRecipeActivity", "onCreate");
             getIngredientAndStepData(savedInstanceState);
-        }
-        else{
+        } else {
             ingredientListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
             setupRecyclerView((RecyclerView) findViewById(R.id.my_ingredient_recycler_view), ingredientListAdapter);
             stepListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
@@ -62,21 +76,19 @@ public class AddRecipeActivity extends AppCompatActivity {
         }
     }
 
-    private void getIngredientAndStepData(Bundle savedInstanceState){
+    private void getIngredientAndStepData(Bundle savedInstanceState) {
         ingredientData = savedInstanceState.getParcelableArrayList("myIngredientData");
         stepData = savedInstanceState.getParcelableArrayList("myStepData");
         if (ingredientData != null) {
             ingredientListAdapter = new MyRecyclerViewAdapter(ingredientData);
             setupRecyclerView((RecyclerView) findViewById(R.id.my_ingredient_recycler_view), ingredientListAdapter);
-        }
-        else{
+        } else {
             Log.d("AddRecipeActivity", "ingredientData == null");
         }
         if (stepData != null) {
             stepListAdapter = new MyRecyclerViewAdapter(stepData);
             setupRecyclerView((RecyclerView) findViewById(R.id.my_step_recycler_view), stepListAdapter);
-        }
-        else{
+        } else {
             Log.d("AddRecipeActivity", "stepData == null");
         }
     }
@@ -90,7 +102,6 @@ public class AddRecipeActivity extends AppCompatActivity {
         stepData = stepListAdapter.getDataSet();
         outState.putParcelableArrayList("myStepData", stepData);
     }
-
 
 
     private void setupRecyclerView(RecyclerView mRecyclerView, RecyclerView.Adapter listAdapter) {
@@ -142,6 +153,7 @@ public class AddRecipeActivity extends AppCompatActivity {
         } else {
             Log.d("addRecipe ", "recipe " + title + " added at " + recipeID + ".");
 
+            //-------Add ingredients---------
             String ingredients = ingredientListAdapter.getDataAsString();
             String[] separated = ingredients.split("`");
 
@@ -170,6 +182,7 @@ public class AddRecipeActivity extends AppCompatActivity {
                 }
             }
 
+            //-------Add steps---------
 
             String steps = stepListAdapter.getDataAsString();
             separated = steps.split("`");
@@ -190,6 +203,75 @@ public class AddRecipeActivity extends AppCompatActivity {
             }
 
 
+            //-------Add images---------
+            Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ig);
+
+            String imagePath = SaveImage(largeIcon, title);
+            if(imagePath!="N/A"){
+                Log.d("RRROBIN", " image for recipe " + recipeID + " added to DB @ " + dbHelper.insertImage(recipeID, imagePath) + ".");
+            }
+            else{
+                Log.d("RRROBIN", "  image not saved ");
+            }
         }
     }
+
+
+    private String SaveImage(Bitmap finalBitmap, String title) {
+        File imagesFolder;
+        File myFile = null;
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+
+        if (finalBitmap != null) {
+            Log.d("RRROBIN", " finalBitmap exists " );
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 80, bytes);
+        }
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                imagesFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "/RecipeSaver");
+                Log.d("RRROBIN", " 1 imagesFolder: " + imagesFolder);
+            } else {
+                imagesFolder = new File(Environment.getExternalStorageDirectory() + "/dcim/" + "RecipeSaver");
+                Log.d("RRROBIN", " 2 imagesFolder: " + imagesFolder);
+            }
+
+            if (!imagesFolder.exists()) {
+                imagesFolder.mkdirs();
+                Log.d("RRROBIN", " 3 imagesFolder: " + imagesFolder);
+            }
+
+
+            myFile = new File(imagesFolder.toString(), "" + title + "0001.jpeg");
+            if (myFile.exists())
+                Log.d("RRROBIN", " :myFile.exists() ");
+            myFile.delete();
+            try {
+                FileOutputStream out = new FileOutputStream(myFile);
+                finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                out.flush();
+                out.close();
+            } catch (IOException e1) {
+                Log.d("RRROBIN", " e1: " + e1);
+                e1.printStackTrace();
+            }
+
+            if (myFile != null) {
+                MediaScannerConnection.scanFile(this, new String[]{myFile.toString()}, null,
+                        new MediaScannerConnection.OnScanCompletedListener() {
+                            public void onScanCompleted(String path, Uri uri) {
+                                Log.i("ExternalStorage", "Scanned " + path + ":");
+                                Log.i("ExternalStorage", "-> uri=" + uri);
+                            }
+                        });
+                return myFile.toString();
+            }
+
+        }
+        return "N/A";
+
+    }
+
+
+
+
 }

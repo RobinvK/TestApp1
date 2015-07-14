@@ -16,4 +16,6 @@
     <string name="lblBtnAdd">Add Item</string>
     <string name="txtEmpty">List is empty</string>
     <string name="lblBtnAddStep">Add Step</string>
+    <string name="year">Year</string>
+    <string name="location">Location</string>
 </resources>

@@ -6,6 +6,7 @@ package com.example.localadmin.testapp1;
 public class RecipeDataCard {
     private String mName;
     private String mDes;
+    private String imagePath;
     private int mThumbnail;
 
     public String getName() {
@@ -18,6 +19,14 @@ public class RecipeDataCard {
 
     public String getDes() {
         return mDes;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     public void setDes(String des) {
