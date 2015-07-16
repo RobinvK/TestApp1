@@ -1,5 +1,16 @@
 package com.example.localadmin.testapp1;
 
+
+/**
+ * Created on 22-6-2015.
+ * Last changed on 15-7-2015
+ * Current version: V 1.0
+ * <p>
+ * changes:
+ *
+ */
+
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,12 +23,14 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
 import com.example.localadmin.testapp1.AddRecipe.AddRecipeActivity;
+import com.example.localadmin.testapp1.ViewRecipe.ViewRecipeListActivity;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener  {
@@ -34,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("RRROBIN", "--------------------------------------------START---------------------------------------");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 

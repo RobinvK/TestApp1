@@ -9,7 +9,10 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * Created on 23-6-2015.
@@ -55,7 +58,7 @@ public class DbAdapter {
     }
 
     public long insertIngredientRecipeLink(long recipeID, long ingredientID){
-        Log.d("insertLink", " recipeID : " + recipeID +" ingredientID : " + ingredientID + ".");
+        Log.d("RRROBIN RECIPEDATA", " recipeID : " + recipeID +" ingredientID : " + ingredientID + ".");
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(DbHelper.LINK_I_UID, ingredientID);
@@ -68,12 +71,23 @@ public class DbAdapter {
 
 
     public long insertStep(long recipeID, String description){
-        Log.d("insertStep", " recipeID : " + recipeID +" description : " + description + ".");
+        Log.d("RRROBIN RECIPEDATA", " recipeID : " + recipeID +" description : " + description + ".");
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(DbHelper.STEP_DESCRIPTION, description);
         contentValues.put(DbHelper.STEP_R_UID, recipeID);
         long insertPos = db.insert(DbHelper.STEP_TABLE_NAME, null, contentValues);
+        db.close();
+        return(insertPos);
+    }
+
+    public long insertImage(long recipeID, String path){
+        Log.d("RRROBIN RECIPEDATA", " recipeID : " + recipeID +" path : " + path + ".");
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DbHelper.IMAGE_PATH, path);
+        contentValues.put(DbHelper.IMAGE_R_UID, recipeID);
+        long insertPos = db.insert(DbHelper.IMAGE_TABLE_NAME, null, contentValues);
         db.close();
         return(insertPos);
     }
@@ -119,7 +133,7 @@ public class DbAdapter {
 
     public int numberOfRecipes() {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        Cursor cursor = db.rawQuery("SELECT "+DbHelper.RECIPE_UID+" FROM "+DbHelper.RECIPE_TABLE_NAME, null);
+        Cursor cursor = db.rawQuery("SELECT " + DbHelper.RECIPE_UID + " FROM " + DbHelper.RECIPE_TABLE_NAME, null);
 
         int number = cursor.getCount();
         if(number <= 0){
@@ -149,6 +163,22 @@ public class DbAdapter {
         return recipeName;
     }
 
+
+    public String getRecipeImagePath(int index) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        String[] columns = {DbHelper.IMAGE_R_UID, DbHelper.IMAGE_PATH};
+        String[] selectionArgs={String.valueOf(index)};
+        Cursor cursor = db.query(DbHelper.IMAGE_TABLE_NAME, columns, DbHelper.IMAGE_R_UID+" =?", selectionArgs, null, null, null);
+        String recipeName = "";
+        while (cursor.moveToNext()){
+            int index1 = cursor.getColumnIndex(DbHelper.IMAGE_PATH);
+            recipeName = cursor.getString(index1);
+        }
+        cursor.close();
+        db.close();
+        return recipeName;
+    }
+
     public String getRecipeIngredients(int index) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         String[] columns = {DbHelper.LINK_R_UID, DbHelper.LINK_I_UID};
@@ -167,7 +197,7 @@ public class DbAdapter {
         cursor = db.rawQuery(query, allIngredients);
 
         StringBuilder buffer = new StringBuilder();
-        for (int i = 0; i < arraySize; i++) {
+        for (int i = 0; i < cursor.getCount(); i++) {  //cursor.getCount() ipv arraySize because cursor.getCount() is lower if there are duplicate entries!
             cursor.moveToNext();
             int index1 = cursor.getColumnIndex(DbHelper.INGREDIENT_NAME);
             String ingredientName = cursor.getString(index1);
@@ -183,8 +213,11 @@ public class DbAdapter {
     }
 
 
+
+
+
     public String getRecipeData(int index) {
-        Log.d("getRecipeData", "recipe index "+index);
+        Log.d("RRROBIN RECIPEDATA", "recipe index "+index);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         String[] columns = {DbHelper.RECIPE_UID, DbHelper.RECIPE_NAME};
@@ -197,7 +230,7 @@ public class DbAdapter {
         while (cursor.moveToNext()){
             int index1 = cursor.getColumnIndex(DbHelper.RECIPE_NAME);
             String recipeName = cursor.getString(index1);
-            Log.d("getRecipeData", "recipeName  "+recipeName);
+            Log.d("RRROBIN RECIPEDATA", "recipeName  "+recipeName);
             buffer.append("Recept '").append(recipeName).append("' has the following ingredients: ").append("\n");
         }
 
@@ -205,17 +238,17 @@ public class DbAdapter {
         selectionArgs=new String[]{String.valueOf(index)};
         cursor = db.query(DbHelper.LINK_TABLE_NAME, columns, DbHelper.LINK_R_UID + " =?", selectionArgs, null, null, null);
         int arraySize = cursor.getCount();
-        Log.d("getRecipeData", "number of ingredients in recipe "+arraySize);
+        Log.d("RRROBIN RECIPEDATA", "number of ingredients in recipe "+arraySize);
         String[] allIngredients = new String[arraySize];
         for (int i = 0; i < arraySize; i++) {
             cursor.moveToNext();
             int index1 = cursor.getColumnIndex(DbHelper.LINK_I_UID);
             allIngredients[i] = cursor.getString(index1);
-            Log.d("getRecipeData", "index of recipe "+i+" = "+allIngredients[i]);
+            Log.d("RRROBIN RECIPEDATA", "index of recipe "+i+" = "+allIngredients[i]);
         }
 
-        Log.d("getRecipeData", "allIngredients.length "+allIngredients.length);
-        Log.d("getRecipeData", "makePlaceholders(allIngredients.length) "+makePlaceholders(allIngredients.length));
+        Log.d("RRROBIN RECIPEDATA", "allIngredients.length "+allIngredients.length);
+        Log.d("RRROBIN RECIPEDATA", "makePlaceholders(allIngredients.length) "+makePlaceholders(allIngredients.length));
         String query = "SELECT "+DbHelper.INGREDIENT_NAME+" FROM "+DbHelper.INGREDIENT_TABLE_NAME+" WHERE "+DbHelper.INGREDIENT_UID+" IN (" + makePlaceholders(allIngredients.length) + ")";
 
         cursor = db.rawQuery(query, allIngredients);
@@ -228,7 +261,7 @@ public class DbAdapter {
             if (i < arraySize - 1) {
                 buffer.append(", ");
             }
-            Log.d("getRecipeData", "ingredientName "+ingredientName);
+            Log.d("RRROBIN RECIPEDATA", "ingredientName "+ingredientName);
         }
 
         //cursor = db.query(DbHelper.INGREDIENT_TABLE_NAME, columns, DbHelper.INGREDIENT_UID + " =?", selectionArgs, null, null, null);
@@ -257,7 +290,7 @@ public class DbAdapter {
     static class DbHelper extends SQLiteOpenHelper {
 
         private static final String DATABASE_NAME = "RecipeDatabase";
-        private static final int DATABASE_VERSION = 2;
+        private static final int DATABASE_VERSION = 3;
 
         //recipes
         private static final String RECIPE_TABLE_NAME = "RECIPE_TABLE";
@@ -297,6 +330,19 @@ public class DbAdapter {
                 STEP_DESCRIPTION+" VARCHAR(1000));";
         private static final String STEP_DROP_TABLE = "DROP TABLE IF EXISTS "+STEP_TABLE_NAME;
 
+
+        //steps
+        private static final String IMAGE_TABLE_NAME = "IMAGE_TABLE";
+        private static final String IMAGE_UID="_id";
+        private static final String IMAGE_R_UID = "RecipeID";
+        private static final String IMAGE_PATH = "Path";
+
+        private static final String IMAGE_CREATE_TABLE = "CREATE TABLE "+IMAGE_TABLE_NAME+" ("+
+                IMAGE_UID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
+                IMAGE_R_UID+" INTEGER, "+
+                IMAGE_PATH+" VARCHAR(1000));";
+        private static final String IMAGE_DROP_TABLE = "DROP TABLE IF EXISTS "+IMAGE_TABLE_NAME;
+
         //links
         private static final String LINK_TABLE_NAME = "RECIPE_INGREDIENTS_LINK_TABLE";
         private static final String LINK_UID="_id";
@@ -330,6 +376,7 @@ public class DbAdapter {
                 db.execSQL(RECIPE_CREATE_TABLE);
                 db.execSQL(INGREDIENT_CREATE_TABLE);
                 db.execSQL(STEP_CREATE_TABLE);
+                db.execSQL(IMAGE_CREATE_TABLE);
                 db.execSQL(LINK_CREATE_TABLE);
             } catch (Exception  e){
                 Toast.makeText(context, ""+e,Toast.LENGTH_LONG).show();//TODO: remove
@@ -346,6 +393,7 @@ public class DbAdapter {
                 db.execSQL(RECIPE_DROP_TABLE);
                 db.execSQL(INGREDIENT_DROP_TABLE);
                 db.execSQL(STEP_DROP_TABLE);
+                db.execSQL(IMAGE_DROP_TABLE);
                 db.execSQL(LINK_DROP_TABLE);
                 onCreate(db);
             } catch (Exception  e){
