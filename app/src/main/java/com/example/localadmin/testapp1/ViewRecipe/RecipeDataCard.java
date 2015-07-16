@@ -1,7 +1,12 @@
-package com.example.localadmin.testapp1;
+package com.example.localadmin.testapp1.ViewRecipe;
 
 /**
- * Created by localadmin on 7-7-2015.
+ * Created on 7-7-2015.
+ * Last changed on 7-7-2015
+ * Current version: V 1.0
+ * <p>
+ * changes:
+ *
  */
 public class RecipeDataCard {
     private String mName;

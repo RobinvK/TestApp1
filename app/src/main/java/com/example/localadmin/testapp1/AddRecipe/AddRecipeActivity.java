@@ -55,7 +55,7 @@ public class AddRecipeActivity extends AppCompatActivity {
 
 
         if (savedInstanceState != null) {
-            Log.d("AddRecipeActivity", "onCreate");
+            Log.d("RRROBIN APP", "AddRecipeActivity onCreate");
             getIngredientAndStepData(savedInstanceState);
         } else {
             ingredientListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
@@ -71,7 +71,7 @@ public class AddRecipeActivity extends AppCompatActivity {
 
         // This is here because if you are recreating after an orientation change, for example, onCreate won't be called
         if (savedInstanceState != null) {
-            Log.d("AddRecipeActivity", "onRestoreInstanceState");
+            Log.d("RRROBIN APP", "AddRecipeActivity onRestoreInstanceState");
             getIngredientAndStepData(savedInstanceState);
         }
     }
@@ -83,19 +83,19 @@ public class AddRecipeActivity extends AppCompatActivity {
             ingredientListAdapter = new MyRecyclerViewAdapter(ingredientData);
             setupRecyclerView((RecyclerView) findViewById(R.id.my_ingredient_recycler_view), ingredientListAdapter);
         } else {
-            Log.d("AddRecipeActivity", "ingredientData == null");
+            Log.d("RRROBIN RECIPEDATA", "ingredientData == null");
         }
         if (stepData != null) {
             stepListAdapter = new MyRecyclerViewAdapter(stepData);
             setupRecyclerView((RecyclerView) findViewById(R.id.my_step_recycler_view), stepListAdapter);
         } else {
-            Log.d("AddRecipeActivity", "stepData == null");
+            Log.d("RRROBIN RECIPEDATA", "stepData == null");
         }
     }
 
     @Override
     protected void onSaveInstanceState(final Bundle outState) {
-        Log.d("AddRecipeActivity", "onSaveInstanceState");
+        Log.d("RRROBIN APP", "AddRecipeActivity onSaveInstanceState");
         super.onSaveInstanceState(outState);
         ingredientData = ingredientListAdapter.getDataSet();
         outState.putParcelableArrayList("myIngredientData", ingredientData);
@@ -115,7 +115,7 @@ public class AddRecipeActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        Log.d("RobinDEBUG080808080 ", "onbackpressed");
+        Log.d("RRROBIN APP", " AddRecipeActivity onbackpressed");
         super.onBackPressed();
     }
 
@@ -139,7 +139,7 @@ public class AddRecipeActivity extends AppCompatActivity {
     }
 
     public void addRecipe(View view) {
-        Log.d("addRecipe ", " start");
+        Log.d("RRROBIN RECIPEDATA", "addRecipe start");
         EditText titleTextField = (EditText) findViewById(R.id.edit_text_recipe_title);
         String title = titleTextField.getText().toString().trim();
 
@@ -149,9 +149,9 @@ public class AddRecipeActivity extends AppCompatActivity {
         }
         long recipeID = dbHelper.insertRecipe(title);
         if (recipeID < 0) {
-            Log.d("addRecipe ", "Something went wrong, recipe " + recipeID + " was not saved");
+            Log.d("RRROBIN RECIPEDATA", "addRecipe Something went wrong, recipe " + recipeID + " was not saved");
         } else {
-            Log.d("addRecipe ", "recipe " + title + " added at " + recipeID + ".");
+            Log.d("RRROBIN RECIPEDATA", "addRecipe recipe " + title + " added at " + recipeID + ".");
 
             //-------Add ingredients---------
             String ingredients = ingredientListAdapter.getDataAsString();
@@ -166,16 +166,16 @@ public class AddRecipeActivity extends AppCompatActivity {
                 separated[i] = separated[i].trim();
                 separated[i] = separated[i].toLowerCase();
                 if (separated[i] == null || separated[i].equals("") || separated[i].equals(" ")) {
-                    Log.d("addRecipe", " ingredient invalid: " + separated[i] + ".");
+                    Log.d("RRROBIN RECIPEDATA", "addRecipe ingredient invalid: " + separated[i] + ".");
                 } else if (dbHelper.IsIngredientAlreadyInDB(separated[i])) {
                     long ingredientID = dbHelper.getIngredientID(separated[i]);
-                    Log.d("addRecipe", " ingredient " + separated[i] + " already exists @ " + ingredientID + ".");
+                    Log.d("RRROBIN RECIPEDATA", "addRecipe ingredient " + separated[i] + " already exists @ " + ingredientID + ".");
                     dbHelper.insertIngredientRecipeLink(recipeID, ingredientID);
                     //TODO: check ID for correct entry
 
                 } else {
                     long ingredientID = dbHelper.insertIngredient(separated[i]);
-                    Log.d("addRecipe", " ingredient " + separated[i] + " added to DB @ " + ingredientID + ".");
+                    Log.d("RRROBIN RECIPEDATA", "addRecipe ingredient " + separated[i] + " added to DB @ " + ingredientID + ".");
                     //TODO: check ID for correct entry
                     dbHelper.insertIngredientRecipeLink(recipeID, ingredientID);
                     //TODO: check ID for correct entry
@@ -195,9 +195,9 @@ public class AddRecipeActivity extends AppCompatActivity {
             for (int i = 0; i < separated.length - 1; i++) {
                 separated[i] = separated[i].trim();
                 if (separated[i] == null || separated[i].equals("") || separated[i].equals(" ")) {
-                    Log.d("addRecipe", " step invalid: " + separated[i] + ".");
+                    Log.d("RRROBIN RECIPEDATA", "addRecipe step invalid: " + separated[i] + ".");
                 } else {
-                    Log.d("addRecipe", " step for recipe " + recipeID + " added to DB @ " + dbHelper.insertStep(recipeID, separated[i]) + ".");
+                    Log.d("RRROBIN RECIPEDATA", "addRecipe step for recipe " + recipeID + " added to DB @ " + dbHelper.insertStep(recipeID, separated[i]) + ".");
                     //TODO: check ID for correct entry
                 }
             }
@@ -207,11 +207,11 @@ public class AddRecipeActivity extends AppCompatActivity {
             Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ig);
 
             String imagePath = SaveImage(largeIcon, title);
-            if(imagePath!="N/A"){
-                Log.d("RRROBIN", " image for recipe " + recipeID + " added to DB @ " + dbHelper.insertImage(recipeID, imagePath) + ".");
+            if(imagePath.equals("N/A")){
+                Log.d("RRROBIN RECIPEDATA", "addRecipe image for recipe " + recipeID + " added to DB @ " + dbHelper.insertImage(recipeID, imagePath) + ".");
             }
             else{
-                Log.d("RRROBIN", "  image not saved ");
+                Log.d("RRROBIN RECIPEDATA", "addRecipe image not saved ");
             }
         }
     }
@@ -219,39 +219,46 @@ public class AddRecipeActivity extends AppCompatActivity {
 
     private String SaveImage(Bitmap finalBitmap, String title) {
         File imagesFolder;
-        File myFile = null;
+        File myFile;
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 
         if (finalBitmap != null) {
-            Log.d("RRROBIN", " finalBitmap exists " );
+            Log.d("RRROBIN RECIPEDATA", " finalBitmap exists " );
             finalBitmap.compress(Bitmap.CompressFormat.JPEG, 80, bytes);
         }
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
                 imagesFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "/RecipeSaver");
-                Log.d("RRROBIN", " 1 imagesFolder: " + imagesFolder);
+                Log.d("RRROBIN RECIPEDATA", " 1 imagesFolder: " + imagesFolder);
             } else {
                 imagesFolder = new File(Environment.getExternalStorageDirectory() + "/dcim/" + "RecipeSaver");
-                Log.d("RRROBIN", " 2 imagesFolder: " + imagesFolder);
+                Log.d("RRROBIN RECIPEDATA", " 2 imagesFolder: " + imagesFolder);
             }
 
             if (!imagesFolder.exists()) {
                 imagesFolder.mkdirs();
-                Log.d("RRROBIN", " 3 imagesFolder: " + imagesFolder);
+                Log.d("RRROBIN RECIPEDATA", " 3 imagesFolder: " + imagesFolder);
             }
 
 
             myFile = new File(imagesFolder.toString(), "" + title + "0001.jpeg");
-            if (myFile.exists())
-                Log.d("RRROBIN", " :myFile.exists() ");
-            myFile.delete();
+            if (myFile.exists()) {
+                Log.d("RRROBIN RECIPEDATA", " :myFile.exists() ");
+                myFile.delete();
+            }
             try {
                 FileOutputStream out = new FileOutputStream(myFile);
-                finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                if (finalBitmap != null) {
+                    finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                }
+                else{
+                    Log.d("RRROBIN RECIPEDATA", " finalBitmap = null");
+                    return "N/A";
+                }
                 out.flush();
                 out.close();
             } catch (IOException e1) {
-                Log.d("RRROBIN", " e1: " + e1);
+                Log.d("RRROBIN RECIPEDATA", " e1: " + e1);
                 e1.printStackTrace();
             }
 

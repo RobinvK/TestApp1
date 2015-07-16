@@ -22,7 +22,7 @@
 
         </activity>
         <activity
-            android:name=".ViewRecipeListActivity"
+            android:name=".ViewRecipe.ViewRecipeListActivity"
             android:label="@string/title_activity_view_recipe_list">
 
         </activity>

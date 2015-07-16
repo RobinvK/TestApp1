@@ -58,7 +58,7 @@ public class DbAdapter {
     }
 
     public long insertIngredientRecipeLink(long recipeID, long ingredientID){
-        Log.d("insertLink", " recipeID : " + recipeID +" ingredientID : " + ingredientID + ".");
+        Log.d("RRROBIN RECIPEDATA", " recipeID : " + recipeID +" ingredientID : " + ingredientID + ".");
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(DbHelper.LINK_I_UID, ingredientID);
@@ -71,7 +71,7 @@ public class DbAdapter {
 
 
     public long insertStep(long recipeID, String description){
-        Log.d("insertStep", " recipeID : " + recipeID +" description : " + description + ".");
+        Log.d("RRROBIN RECIPEDATA", " recipeID : " + recipeID +" description : " + description + ".");
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(DbHelper.STEP_DESCRIPTION, description);
@@ -82,7 +82,7 @@ public class DbAdapter {
     }
 
     public long insertImage(long recipeID, String path){
-        Log.d("insertStep", " recipeID : " + recipeID +" path : " + path + ".");
+        Log.d("RRROBIN RECIPEDATA", " recipeID : " + recipeID +" path : " + path + ".");
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(DbHelper.IMAGE_PATH, path);
@@ -217,7 +217,7 @@ public class DbAdapter {
 
 
     public String getRecipeData(int index) {
-        Log.d("getRecipeData", "recipe index "+index);
+        Log.d("RRROBIN RECIPEDATA", "recipe index "+index);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         String[] columns = {DbHelper.RECIPE_UID, DbHelper.RECIPE_NAME};
@@ -230,7 +230,7 @@ public class DbAdapter {
         while (cursor.moveToNext()){
             int index1 = cursor.getColumnIndex(DbHelper.RECIPE_NAME);
             String recipeName = cursor.getString(index1);
-            Log.d("getRecipeData", "recipeName  "+recipeName);
+            Log.d("RRROBIN RECIPEDATA", "recipeName  "+recipeName);
             buffer.append("Recept '").append(recipeName).append("' has the following ingredients: ").append("\n");
         }
 
@@ -238,17 +238,17 @@ public class DbAdapter {
         selectionArgs=new String[]{String.valueOf(index)};
         cursor = db.query(DbHelper.LINK_TABLE_NAME, columns, DbHelper.LINK_R_UID + " =?", selectionArgs, null, null, null);
         int arraySize = cursor.getCount();
-        Log.d("getRecipeData", "number of ingredients in recipe "+arraySize);
+        Log.d("RRROBIN RECIPEDATA", "number of ingredients in recipe "+arraySize);
         String[] allIngredients = new String[arraySize];
         for (int i = 0; i < arraySize; i++) {
             cursor.moveToNext();
             int index1 = cursor.getColumnIndex(DbHelper.LINK_I_UID);
             allIngredients[i] = cursor.getString(index1);
-            Log.d("getRecipeData", "index of recipe "+i+" = "+allIngredients[i]);
+            Log.d("RRROBIN RECIPEDATA", "index of recipe "+i+" = "+allIngredients[i]);
         }
 
-        Log.d("getRecipeData", "allIngredients.length "+allIngredients.length);
-        Log.d("getRecipeData", "makePlaceholders(allIngredients.length) "+makePlaceholders(allIngredients.length));
+        Log.d("RRROBIN RECIPEDATA", "allIngredients.length "+allIngredients.length);
+        Log.d("RRROBIN RECIPEDATA", "makePlaceholders(allIngredients.length) "+makePlaceholders(allIngredients.length));
         String query = "SELECT "+DbHelper.INGREDIENT_NAME+" FROM "+DbHelper.INGREDIENT_TABLE_NAME+" WHERE "+DbHelper.INGREDIENT_UID+" IN (" + makePlaceholders(allIngredients.length) + ")";
 
         cursor = db.rawQuery(query, allIngredients);
@@ -261,7 +261,7 @@ public class DbAdapter {
             if (i < arraySize - 1) {
                 buffer.append(", ");
             }
-            Log.d("getRecipeData", "ingredientName "+ingredientName);
+            Log.d("RRROBIN RECIPEDATA", "ingredientName "+ingredientName);
         }
 
         //cursor = db.query(DbHelper.INGREDIENT_TABLE_NAME, columns, DbHelper.INGREDIENT_UID + " =?", selectionArgs, null, null, null);
