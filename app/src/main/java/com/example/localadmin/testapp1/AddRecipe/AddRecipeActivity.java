@@ -33,10 +33,11 @@ import java.util.Random;
 
 /**
  * Created on 22-6-2015.
- * Last changed on 9-7-2015
- * Current version: V 1.01
- * <p>
+ * Last changed on 20-7-2015
+ * Current version: V 1.02
+ *
  * changes:
+ * V1.02 - 20-7-2015: bugfix due to file name changes of recyclerview_item_step_add_recipe and recyclerview_item_ingredient_add_recipe
  * V1.01 - 9-7-2015: implementation of onRestoreInstanceState & onSaveInstanceState to retain elements added to the Recyclerviews on orientation change
  */
 public class AddRecipeActivity extends AppCompatActivity {
@@ -58,9 +59,9 @@ public class AddRecipeActivity extends AppCompatActivity {
             Log.d("RRROBIN APP", "AddRecipeActivity onCreate");
             getIngredientAndStepData(savedInstanceState);
         } else {
-            ingredientListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
+            ingredientListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>(), "INGREDIENT");
             setupRecyclerView((RecyclerView) findViewById(R.id.my_ingredient_recycler_view), ingredientListAdapter);
-            stepListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
+            stepListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>(), "STEP");
             setupRecyclerView((RecyclerView) findViewById(R.id.my_step_recycler_view), stepListAdapter);
         }
     }
@@ -80,13 +81,13 @@ public class AddRecipeActivity extends AppCompatActivity {
         ingredientData = savedInstanceState.getParcelableArrayList("myIngredientData");
         stepData = savedInstanceState.getParcelableArrayList("myStepData");
         if (ingredientData != null) {
-            ingredientListAdapter = new MyRecyclerViewAdapter(ingredientData);
+            ingredientListAdapter = new MyRecyclerViewAdapter(ingredientData, "INGREDIENT");
             setupRecyclerView((RecyclerView) findViewById(R.id.my_ingredient_recycler_view), ingredientListAdapter);
         } else {
             Log.d("RRROBIN RECIPEDATA", "ingredientData == null");
         }
         if (stepData != null) {
-            stepListAdapter = new MyRecyclerViewAdapter(stepData);
+            stepListAdapter = new MyRecyclerViewAdapter(stepData, "STEP");
             setupRecyclerView((RecyclerView) findViewById(R.id.my_step_recycler_view), stepListAdapter);
         } else {
             Log.d("RRROBIN RECIPEDATA", "stepData == null");

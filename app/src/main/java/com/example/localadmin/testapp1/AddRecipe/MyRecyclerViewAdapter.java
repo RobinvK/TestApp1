@@ -1,6 +1,7 @@
 package com.example.localadmin.testapp1.AddRecipe;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,26 +14,37 @@ import java.util.ArrayList;
 
 /**
  * Created on 22-6-2015.
- * Last changed on 9-7-2015
- * Current version: V 1.01
+ * Last changed on 20-7-2015
+ * Current version: V 1.02
  *
  * changes:
+ * V1.02 - 20-7-2015: bugfix due to file name changes of recyclerview_item_step_add_recipe and recyclerview_item_ingredient_add_recipe
  * V1.01 - 9-7-2015: implementation of getDataSet to accommodate V1.01 changes to AddRecipeActivity
  *
  */
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.IngredientViewHolder> {
     private ArrayList<DataObject> mDataSet;
+    private String dataType;
 
-    public MyRecyclerViewAdapter(ArrayList<DataObject> myDataset) {
+    public MyRecyclerViewAdapter(ArrayList<DataObject> myDataset, String dataType) {
+
         mDataSet = myDataset;
+        this.dataType = dataType;
     }
 
 
 
     @Override
     public IngredientViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recyclerview_item_recipe_view_recipe_list, parent, false);
+        View view;
+        Log.d("RRROBIN RECIPEDATA", "dataType = "+dataType);
+        if(dataType=="STEP"){
+            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recyclerview_item_step_add_recipe, parent, false);
+        }
+        else{
+            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recyclerview_item_ingredient_add_recipe, parent, false);
+        }
 
         return new IngredientViewHolder(view);
     }
