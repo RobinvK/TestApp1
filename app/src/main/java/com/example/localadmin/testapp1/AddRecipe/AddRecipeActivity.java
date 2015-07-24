@@ -1,8 +1,12 @@
 package com.example.localadmin.testapp1.AddRecipe;
 
+import android.annotation.TargetApi;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +16,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -34,9 +40,10 @@ import java.util.Random;
 /**
  * Created on 22-6-2015.
  * Last changed on 9-7-2015
- * Current version: V 1.01
+ * Current version: V 1.02
  * <p>
  * changes:
+ * V1.02 - 23-7-2015: implementation of adding an image
  * V1.01 - 9-7-2015: implementation of onRestoreInstanceState & onSaveInstanceState to retain elements added to the Recyclerviews on orientation change
  */
 public class AddRecipeActivity extends AppCompatActivity {
@@ -47,6 +54,8 @@ public class AddRecipeActivity extends AppCompatActivity {
     ArrayList<DataObject> ingredientData;
     ArrayList<DataObject> stepData;
 
+    private int PICK_IMAGE_REQUEST = 1;
+    private String selectedImagePath = "N/A";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,13 +63,14 @@ public class AddRecipeActivity extends AppCompatActivity {
         dbHelper = new DbAdapter(this);
 
 
+
         if (savedInstanceState != null) {
             Log.d("RRROBIN APP", "AddRecipeActivity onCreate");
             getIngredientAndStepData(savedInstanceState);
         } else {
-            ingredientListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
+            ingredientListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>(), "INGREDIENT");
             setupRecyclerView((RecyclerView) findViewById(R.id.my_ingredient_recycler_view), ingredientListAdapter);
-            stepListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>());
+            stepListAdapter = new MyRecyclerViewAdapter(new ArrayList<DataObject>(), "STEP");
             setupRecyclerView((RecyclerView) findViewById(R.id.my_step_recycler_view), stepListAdapter);
         }
     }
@@ -80,13 +90,13 @@ public class AddRecipeActivity extends AppCompatActivity {
         ingredientData = savedInstanceState.getParcelableArrayList("myIngredientData");
         stepData = savedInstanceState.getParcelableArrayList("myStepData");
         if (ingredientData != null) {
-            ingredientListAdapter = new MyRecyclerViewAdapter(ingredientData);
+            ingredientListAdapter = new MyRecyclerViewAdapter(ingredientData, "INGREDIENT");
             setupRecyclerView((RecyclerView) findViewById(R.id.my_ingredient_recycler_view), ingredientListAdapter);
         } else {
             Log.d("RRROBIN RECIPEDATA", "ingredientData == null");
         }
         if (stepData != null) {
-            stepListAdapter = new MyRecyclerViewAdapter(stepData);
+            stepListAdapter = new MyRecyclerViewAdapter(stepData, "STEP");
             setupRecyclerView((RecyclerView) findViewById(R.id.my_step_recycler_view), stepListAdapter);
         } else {
             Log.d("RRROBIN RECIPEDATA", "stepData == null");
@@ -204,15 +214,22 @@ public class AddRecipeActivity extends AppCompatActivity {
 
 
             //-------Add images---------
-            Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ig);
-
-            String imagePath = SaveImage(largeIcon, title);
-            if(imagePath.equals("N/A")){
-                Log.d("RRROBIN RECIPEDATA", "addRecipe image for recipe " + recipeID + " added to DB @ " + dbHelper.insertImage(recipeID, imagePath) + ".");
+            if (selectedImagePath.equals("N/A")) {
+                Log.d("RRROBIN RECIPEDATA", " addRecipe, no image was uploaded ");
             }
             else{
-                Log.d("RRROBIN RECIPEDATA", "addRecipe image not saved ");
+                Bitmap recipeImage = BitmapFactory.decodeFile(selectedImagePath);
+
+                String imagePath = SaveImage(recipeImage, title);
+
+                if (imagePath.equals("N/A")) {
+                    Log.d("RRROBIN RECIPEDATA", " addRecipe, image not saved ");
+                } else {
+                    Log.d("RRROBIN RECIPEDATA", " addRecipe, image for recipe " + recipeID + " added to DB @ " + dbHelper.insertImage(recipeID, imagePath) + ".");
+                }
             }
+
+
         }
     }
 
@@ -223,7 +240,7 @@ public class AddRecipeActivity extends AppCompatActivity {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 
         if (finalBitmap != null) {
-            Log.d("RRROBIN RECIPEDATA", " finalBitmap exists " );
+            Log.d("RRROBIN RECIPEDATA", " finalBitmap exists ");
             finalBitmap.compress(Bitmap.CompressFormat.JPEG, 80, bytes);
         }
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
@@ -250,8 +267,7 @@ public class AddRecipeActivity extends AppCompatActivity {
                 FileOutputStream out = new FileOutputStream(myFile);
                 if (finalBitmap != null) {
                     finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
-                }
-                else{
+                } else {
                     Log.d("RRROBIN RECIPEDATA", " finalBitmap = null");
                     return "N/A";
                 }
@@ -277,6 +293,253 @@ public class AddRecipeActivity extends AppCompatActivity {
         return "N/A";
 
     }
+
+
+    public void addImage(View view) {
+
+
+        Intent intent = new Intent();
+        // Show only images, no videos or anything else
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        // Always show the chooser (if there are multiple options available)
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+
+
+/*      //open with different type of gallery
+        //not yet optimized, for example, images from google drive will not work...
+        if (Build.VERSION.SDK_INT <19){
+            Log.d("RRROBIN RECIPEDATA", " Build.VERSION.SDK_INT <19");
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"),PICK_IMAGE_REQUEST);
+        } else {
+            Log.d("RRROBIN RECIPEDATA", " Build.VERSION.SDK_INT >=19");
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("image/*");
+            startActivityForResult(intent, 100);
+        }   */
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("RRROBIN RECIPEDATA", " onActivityResult");
+
+        if ((requestCode == 100 || requestCode == PICK_IMAGE_REQUEST) && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Log.d("RRROBIN RECIPEDATA", " RESULT_OK");
+
+            Uri uri = data.getData();
+            Log.d("RRROBIN RECIPEDATA", " image uri =  " + uri);
+
+            Log.d("RRROBIN RECIPEDATA", " uri.getAuthority() =  " + uri.getAuthority());
+            Log.d("RRROBIN RECIPEDATA", " getPath =  " + getPath(this, uri));
+
+
+            ImageView imageView = (ImageView) findViewById(R.id.image_view_add_recipe);
+            imageView.setImageURI(uri);
+            selectedImagePath = getPath(this, uri);
+
+            /*
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                // Log.d(TAG, String.valueOf(bitmap));
+
+                ImageView imageView = (ImageView) findViewById(R.id.image_view_add_recipe);
+                imageView.setImageBitmap(bitmap);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            */
+        }
+    }
+
+
+
+
+    public static String getPath(final Context context, final Uri uri) {
+
+            Log.d("RRROBIN RECIPEDATA", " File -" +
+                            "Authority: " + uri.getAuthority() +
+                            ", Fragment: " + uri.getFragment() +
+                            ", Port: " + uri.getPort() +
+                            ", Query: " + uri.getQuery() +
+                            ", Scheme: " + uri.getScheme() +
+                            ", Host: " + uri.getHost() +
+                            ", Segments: " + uri.getPathSegments().toString()
+            );
+
+
+        // DocumentProvider
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && DocumentsContract.isDocumentUri(context, uri)) {
+            Log.d("RRROBIN RECIPEDATA", " isKITKAT");
+            // LocalStorageProvider
+
+
+            // ExternalStorageProvider
+            if (isExternalStorageDocument(uri)) {
+                Log.d("RRROBIN RECIPEDATA", " isExternalStorageDocument");
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                if ("primary".equalsIgnoreCase(type)) {
+                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                }
+
+                // TODO handle non-primary volumes
+            }
+            // DownloadsProvider
+            else if (isDownloadsDocument(uri)) {
+                Log.d("RRROBIN RECIPEDATA", " isDownloadsDocument");
+
+                final String id = DocumentsContract.getDocumentId(uri);
+                final Uri contentUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+                return getDataColumn(context, contentUri, null, null);
+            }
+            // MediaProvider
+            else if (isMediaDocument(uri)) {
+                Log.d("RRROBIN RECIPEDATA", " isMediaDocument");
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                Uri contentUri = null;
+                if ("image".equals(type)) {
+                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                } else if ("video".equals(type)) {
+                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                } else if ("audio".equals(type)) {
+                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                }
+
+                final String selection = "_id=?";
+                final String[] selectionArgs = new String[] {
+                        split[1]
+                };
+
+                return getDataColumn(context, contentUri, selection, selectionArgs);
+            }
+            else{
+                Log.d("RRROBIN RECIPEDATA", " DocumentsContract.getDocumentId(uri)");
+                return DocumentsContract.getDocumentId(uri);
+            }
+        }
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            Log.d("RRROBIN RECIPEDATA", " MediaStore (and general)");
+
+            // Return the remote address
+            if (isGooglePhotosUri(uri))
+                return uri.getLastPathSegment();
+
+            return getDataColumn(context, uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            Log.d("RRROBIN RECIPEDATA", " File");
+            return uri.getPath();
+        }
+
+        return null;
+    }
+
+
+
+
+
+
+    public static String getDataColumn(Context context, Uri uri, String selection,
+                                       String[] selectionArgs) {
+
+        Cursor cursor = null;
+        final String column = "_data";
+        final String[] projection = {
+                column
+        };
+
+        try {
+            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+
+                final int column_index = cursor.getColumnIndexOrThrow(column);
+                return cursor.getString(column_index);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return null;
+    }
+
+
+
+
+    /**
+     * @param uri The Uri to check.
+     * @author paulburke
+     */
+  //  public static boolean isLocalStorageDocument(Uri uri) {
+  //      return LocalStorageProvider.AUTHORITY.equals(uri.getAuthority());
+  //  }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is ExternalStorageProvider.
+     * @author paulburke
+     */
+    public static boolean isExternalStorageDocument(Uri uri) {
+        return "com.android.externalstorage.documents".equals(uri.getAuthority());
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is DownloadsProvider.
+     * @author paulburke
+     */
+    public static boolean isDownloadsDocument(Uri uri) {
+        return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is MediaProvider.
+     * @author paulburke
+     */
+    public static boolean isMediaDocument(Uri uri) {
+        return "com.android.providers.media.documents".equals(uri.getAuthority());
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is Google Photos.
+     */
+    public static boolean isGooglePhotosUri(Uri uri) {
+        return "com.google.android.apps.photos.content".equals(uri.getAuthority());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

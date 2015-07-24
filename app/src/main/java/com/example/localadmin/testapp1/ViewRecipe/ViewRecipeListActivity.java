@@ -3,9 +3,10 @@ package com.example.localadmin.testapp1.ViewRecipe;
 /**
  * Created on 22-6-2015.
  * Last changed on 15-7-2015
- * Current version: V 1.01
+ * Current version: V 1.02
  * <p>
  * changes:
+ * V1.02 - 23-7-2015: removal of unnecessary library
  * V1.01 - 9-7-2015: implementation of FoldableLayout for recipes, implementation of scrollview on viewing a single recipe.
  */
 
@@ -23,9 +24,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-
-import com.alexvasilkov.android.commons.utils.Views;
-import com.example.localadmin.testapp1.ViewRecipe.MyCardAdapter;
 import com.example.localadmin.testapp1.DbAdapter;
 import com.example.localadmin.testapp1.ViewRecipe.FoldableItem.UnfoldableView;
 import com.example.localadmin.testapp1.ViewRecipe.FoldableItem.shading.GlanceFoldShading;
@@ -61,12 +59,12 @@ public class ViewRecipeListActivity extends AppCompatActivity {
     }
 
     private void createRecipeLayout(){
-        mListTouchInterceptor = Views.find(this, R.id.touch_interceptor_view);
+        mListTouchInterceptor = (View)findViewById(R.id.touch_interceptor_view);
         mListTouchInterceptor.setClickable(false);
 
-        mDetailsLayout = Views.find(this, R.id.details_layout);
+        mDetailsLayout = (View)findViewById(R.id.details_layout);
         mDetailsLayout.setVisibility(View.INVISIBLE);
-        mUnfoldableView = Views.find(this, R.id.unfoldable_view);
+        mUnfoldableView = (UnfoldableView)findViewById(R.id.unfoldable_view);
 
         Bitmap glance = BitmapFactory.decodeResource(getResources(), R.drawable.unfold_glance);
         mUnfoldableView.setFoldShading(new GlanceFoldShading(this, glance));
@@ -155,9 +153,9 @@ public class ViewRecipeListActivity extends AppCompatActivity {
     }
 
     public void openDetails(View coverView, String recipeImagePath, TextView recipeTitle, TextView recipeDescription) {
-        ImageView image = Views.find(mDetailsLayout, R.id.details_image);
-        TextView title = Views.find(mDetailsLayout, R.id.details_title);
-        TextView description = Views.find(mDetailsLayout, R.id.details_text);
+        ImageView image = (ImageView)findViewById(R.id.details_image);
+        TextView title = (TextView)findViewById(R.id.details_title);
+        TextView description = (TextView)findViewById(R.id.details_text);
         image.setImageBitmap(BitmapFactory.decodeFile(recipeImagePath));
         title.setText(recipeTitle.getText());
         description.setText(recipeDescription.getText());

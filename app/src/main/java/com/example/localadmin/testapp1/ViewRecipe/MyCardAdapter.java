@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.localadmin.testapp1.R;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +18,10 @@ import java.util.List;
 /**
  * Created on 7-7-2015.
  * Last changed on 7-7-2015
- * Current version: V 1.0
+ * Current version: V 1.01
  * <p>
  * changes:
+ * V1.01 - 23-7-2015: implementation of Picasso
  *
  */
 public class MyCardAdapter extends RecyclerView.Adapter<MyCardAdapter.CardViewHolder> {
@@ -47,9 +49,12 @@ public class MyCardAdapter extends RecyclerView.Adapter<MyCardAdapter.CardViewHo
         //viewHolder.image.getContext()
         Log.d("RRROBIN RECIPEDATA", " b4 getRecipeImagePath  ");
         Log.d("RRROBIN RECIPEDATA", "  recipeDataCard.getImagePath()  " + recipeDataCard.getImagePath());
-        viewHolder.image.setImageBitmap(BitmapFactory.decodeFile(recipeDataCard.getImagePath()));
         viewHolder.imagePath=recipeDataCard.getImagePath();
-       // Picasso.with(viewHolder.image.getContext()).load(recipeDataCard.getImagePath()).into(viewHolder.image);
+        viewHolder.image.setImageBitmap(BitmapFactory.decodeFile(recipeDataCard.getImagePath()));
+        //TODO: is Picasso necessary?
+        //Picasso.with(viewHolder.image.getContext())
+        //.load(recipeDataCard.getImagePath())
+        //.into(viewHolder.image);
     }
 
     @Override

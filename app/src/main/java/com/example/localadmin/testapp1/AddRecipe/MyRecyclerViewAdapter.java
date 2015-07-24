@@ -23,16 +23,25 @@ import java.util.ArrayList;
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.IngredientViewHolder> {
     private ArrayList<DataObject> mDataSet;
+    private String dataType;
 
-    public MyRecyclerViewAdapter(ArrayList<DataObject> myDataset) {
+    public MyRecyclerViewAdapter(ArrayList<DataObject> myDataset, String myDataType) {
         mDataSet = myDataset;
+        dataType = myDataType;
     }
 
 
 
     @Override
     public IngredientViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recyclerview_item_recipe_view_recipe_list, parent, false);
+        View view;
+        if(dataType=="INGREDIENT") {
+            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recyclerview_item_ingredient_add_recipe, parent, false);
+        }
+        else{
+
+            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recyclerview_item_step_add_recipe, parent, false);
+        }
 
         return new IngredientViewHolder(view);
     }
