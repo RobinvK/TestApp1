@@ -29,6 +29,8 @@ import android.widget.Toast;
 
 import com.example.localadmin.testapp1.DbAdapter;
 import com.example.localadmin.testapp1.R;
+import com.example.localadmin.testapp1.ViewRecipe.ViewRecipeListActivity;
+import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,10 +41,13 @@ import java.util.Random;
 
 /**
  * Created on 22-6-2015.
- * Last changed on 9-7-2015
- * Current version: V 1.02
- * <p>
+ * Last changed on 28-7-2015
+ * Current version: V 1.05
+ *
  * changes:
+ * V1.05 - 28-7-2015: improved Picasso implementation
+ * V1.04 - 25-7-2015: revert to Picasso 2.4.0 from 2.5.2 due to MarkableInputStream bug
+ * V1.03 - 24-7-2015: implementation of Picasso
  * V1.02 - 23-7-2015: implementation of adding an image
  * V1.01 - 9-7-2015: implementation of onRestoreInstanceState & onSaveInstanceState to retain elements added to the Recyclerviews on orientation change
  */
@@ -159,7 +164,7 @@ public class AddRecipeActivity extends AppCompatActivity {
         }
         long recipeID = dbHelper.insertRecipe(title);
         if (recipeID < 0) {
-            Log.d("RRROBIN RECIPEDATA", "addRecipe Something went wrong, recipe " + recipeID + " was not saved");
+            Log.d("RRROBIN ERROR", "addRecipe Something went wrong, recipe " + recipeID + " was not saved");
         } else {
             Log.d("RRROBIN RECIPEDATA", "addRecipe recipe " + title + " added at " + recipeID + ".");
 
@@ -176,7 +181,7 @@ public class AddRecipeActivity extends AppCompatActivity {
                 separated[i] = separated[i].trim();
                 separated[i] = separated[i].toLowerCase();
                 if (separated[i] == null || separated[i].equals("") || separated[i].equals(" ")) {
-                    Log.d("RRROBIN RECIPEDATA", "addRecipe ingredient invalid: " + separated[i] + ".");
+                    Log.d("RRROBIN ERROR", "addRecipe ingredient invalid: " + separated[i] + ".");
                 } else if (dbHelper.IsIngredientAlreadyInDB(separated[i])) {
                     long ingredientID = dbHelper.getIngredientID(separated[i]);
                     Log.d("RRROBIN RECIPEDATA", "addRecipe ingredient " + separated[i] + " already exists @ " + ingredientID + ".");
@@ -205,7 +210,7 @@ public class AddRecipeActivity extends AppCompatActivity {
             for (int i = 0; i < separated.length - 1; i++) {
                 separated[i] = separated[i].trim();
                 if (separated[i] == null || separated[i].equals("") || separated[i].equals(" ")) {
-                    Log.d("RRROBIN RECIPEDATA", "addRecipe step invalid: " + separated[i] + ".");
+                    Log.d("RRROBIN ERROR", "addRecipe step invalid: " + separated[i] + ".");
                 } else {
                     Log.d("RRROBIN RECIPEDATA", "addRecipe step for recipe " + recipeID + " added to DB @ " + dbHelper.insertStep(recipeID, separated[i]) + ".");
                     //TODO: check ID for correct entry
@@ -215,7 +220,7 @@ public class AddRecipeActivity extends AppCompatActivity {
 
             //-------Add images---------
             if (selectedImagePath.equals("N/A")) {
-                Log.d("RRROBIN RECIPEDATA", " addRecipe, no image was uploaded ");
+                Log.d("RRROBIN ERROR", " addRecipe, no image was uploaded ");
             }
             else{
                 Bitmap recipeImage = BitmapFactory.decodeFile(selectedImagePath);
@@ -223,11 +228,15 @@ public class AddRecipeActivity extends AppCompatActivity {
                 String imagePath = SaveImage(recipeImage, title);
 
                 if (imagePath.equals("N/A")) {
-                    Log.d("RRROBIN RECIPEDATA", " addRecipe, image not saved ");
+                    Log.d("RRROBIN ERROR", " addRecipe, image not saved ");
                 } else {
                     Log.d("RRROBIN RECIPEDATA", " addRecipe, image for recipe " + recipeID + " added to DB @ " + dbHelper.insertImage(recipeID, imagePath) + ".");
                 }
             }
+
+            Intent intent = new Intent(this, ViewRecipeListActivity.class);
+            intent.putExtra("ADDED_RECIPE", recipeID); //Your id
+            startActivity(intent);//TODO:preload images in ViewRecipeListActivity
 
 
         }
@@ -241,7 +250,7 @@ public class AddRecipeActivity extends AppCompatActivity {
 
         if (finalBitmap != null) {
             Log.d("RRROBIN RECIPEDATA", " finalBitmap exists ");
-            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 80, bytes);
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 70, bytes);//TODO: settings option for image quality
         }
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
@@ -274,7 +283,7 @@ public class AddRecipeActivity extends AppCompatActivity {
                 out.flush();
                 out.close();
             } catch (IOException e1) {
-                Log.d("RRROBIN RECIPEDATA", " e1: " + e1);
+                Log.d("RRROBIN ERROR", " e1: " + e1);
                 e1.printStackTrace();
             }
 
@@ -335,13 +344,77 @@ public class AddRecipeActivity extends AppCompatActivity {
             Uri uri = data.getData();
             Log.d("RRROBIN RECIPEDATA", " image uri =  " + uri);
 
-            Log.d("RRROBIN RECIPEDATA", " uri.getAuthority() =  " + uri.getAuthority());
             Log.d("RRROBIN RECIPEDATA", " getPath =  " + getPath(this, uri));
 
 
             ImageView imageView = (ImageView) findViewById(R.id.image_view_add_recipe);
-            imageView.setImageURI(uri);
+          //  imageView.setImageURI(uri);
+
             selectedImagePath = getPath(this, uri);
+
+
+            Picasso picasso = new Picasso.Builder(imageView.getContext()).listener(new Picasso.Listener() {
+                @Override
+                public void onImageLoadFailed(Picasso picasso, Uri uri, Exception exception) {
+                    Log.d("RRROBIN ERROR", " AddRecipeActivity Picasso printStackTrace");
+                    //TODO: implement fallback when error occurs, also for the .load function below
+                    exception.printStackTrace();
+                }
+            }).build();
+
+            picasso.with(imageView.getContext())
+                    .setIndicatorsEnabled(true);
+            picasso.with(imageView.getContext())
+                    .load(new File(getPath(this, uri)))
+                    .fit()
+                    .centerCrop()
+                    .into(imageView, new com.squareup.picasso.Callback() {
+                        @Override
+                        public void onSuccess() {
+                            Log.d("RRROBIN ERROR", " AddRecipeActivity Picasso onSuccess");
+
+                        }
+
+                        @Override
+                        public void onError() {
+                            Log.d("RRROBIN ERROR", " AddRecipeActivity Picasso onerror");
+                        }
+                    });
+
+
+            /*
+            Picasso.Builder builder = new Picasso.Builder(this);
+            builder.listener(new Picasso.Listener()
+            {
+                @Override
+                public void onImageLoadFailed(Picasso picasso, Uri uri, Exception exception)
+                {
+                    Log.d("RRROBIN ERROR", "printStackTrace");
+                    exception.printStackTrace();
+                    //TODO: implement fallback when error occurs, also for the .load function below
+                }
+            });
+            builder.build().load(new File(getPath(this, uri)))
+                    .fit()
+                    .centerCrop()
+                    .into(imageView, new com.squareup.picasso.Callback() {
+                        @Override
+                        public void onSuccess() {
+
+                        }
+
+                        @Override
+                        public void onError() {
+                            Log.d("RRROBIN ERROR", "onerror");
+                        }
+                    });
+
+            Picasso.with(imageView.getContext())
+                    .load(new File(getPath(this, uri)))
+                    .error(R.drawable.ig)
+                    .fit()
+                    .centerCrop()
+                    .into(imageView);*/
 
             /*
             try {

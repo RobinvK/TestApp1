@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created on 23-6-2015.
@@ -286,6 +287,36 @@ public class DbAdapter {
     public String makePlaceholders(int len) {
         return TextUtils.join(",", Collections.nCopies(len, "?"));
     }
+
+    public int[] getLastRecipes(int numberOfRecipesToRetrieve) {
+        Log.d("RRROBIN APP", " getLastThreeRecipes");
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        String query = "SELECT "+DbHelper.RECIPE_UID+" FROM (SELECT "+DbHelper.RECIPE_UID+" FROM "+DbHelper.RECIPE_TABLE_NAME+" ORDER BY "+DbHelper.RECIPE_UID+" DESC LIMIT "+numberOfRecipesToRetrieve+") ORDER BY "+DbHelper.RECIPE_UID+" ASC;";
+
+        Log.d("RRROBIN APP", " b4 rawQuery");
+        Cursor cursor = db.rawQuery(query, null);
+        Log.d("RRROBIN APP", " after rawQuery");
+
+        if(cursor.getCount()<numberOfRecipesToRetrieve){
+            numberOfRecipesToRetrieve=cursor.getCount();
+            Log.d("RRROBIN WARNING", "trying to retrieve more recipes than the number of existing recipes");
+        }
+        int[] selectedRecipes = new int[numberOfRecipesToRetrieve];
+        Log.d("RRROBIN APP", " cursor.getCount() = "+cursor.getCount());
+        for (int i = 0; i < cursor.getCount(); i++) {
+            cursor.moveToNext();
+            int index1 = cursor.getColumnIndex(DbHelper.RECIPE_UID);
+            selectedRecipes[i] = Integer.parseInt(cursor.getString(index1));
+            Log.d("RRROBIN RECIPEDATA", "selectedRecipes["+i+"] = "+selectedRecipes[i]);
+        }
+
+        cursor.close();
+        db.close();
+
+        return selectedRecipes;
+    }
+
+
 
     static class DbHelper extends SQLiteOpenHelper {
 

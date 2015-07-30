@@ -1,29 +1,38 @@
 package com.example.localadmin.testapp1.ViewRecipe;
 
+import android.view.View;
+
 /**
  * Created on 7-7-2015.
- * Last changed on 7-7-2015
- * Current version: V 1.0
- * <p>
+ * Last changed on 29-7-2015
+ * Current version: V 1.01
+ *
  * changes:
+ * V1.01 - 29-7-2015: Name changes
  *
  */
 public class RecipeDataCard {
+    private long recipeIndex;
     private String mName;
-    private String mDes;
+    private String mIng;
     private String imagePath;
     private int mThumbnail;
+    public long getIndex() {
+        return recipeIndex;
+    }
 
+    public void setIndex(long index) {
+        this.recipeIndex = index;
+    }
     public String getName() {
         return mName;
     }
-
     public void setName(String name) {
         this.mName = name;
     }
 
-    public String getDes() {
-        return mDes;
+    public String getIngredients() {
+        return mIng;
     }
 
     public String getImagePath() {
@@ -34,8 +43,8 @@ public class RecipeDataCard {
         this.imagePath = imagePath;
     }
 
-    public void setDes(String des) {
-        this.mDes = des;
+    public void setIngredients(String ing) {
+        this.mIng = ing;
     }
 
     public int getThumbnail() {
